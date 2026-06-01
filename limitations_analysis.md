@@ -178,8 +178,8 @@
 
 ### 🔴 P0 - 紧急
 
-- [ ] 添加系统依赖检测 (curl, pandoc, tesseract)
-- [ ] 添加完整单元测试套件
+- [x] 添加系统依赖检测 (curl, pandoc, tesseract) ✅
+- [x] 添加完整单元测试套件 ✅
 
 ### 🟠 P1 - 高优先级
 
