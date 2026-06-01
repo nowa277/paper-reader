@@ -40,7 +40,6 @@
 [![arXiv](https://img.shields.io/badge/arXiv-Search-orange?style=flat-square&logo=arxiv&logoColor=white)](https://arxiv.org)
 [![PubMed](https://img.shields.io/badge/PubMed-Search-0099CC?style=flat-square)](https://pubmed.ncbi.nlm.nih.gov)
 [![Semantic Scholar](https://img.shields.io/badge/Semantic%20Scholar-Search-8C4A8D?style=flat-square)](https://semanticscholar.org)
-[![CrossRef](https://img.shields.io/badge/CrossRef-Search-CrossRef?style=flat-square)](https://crossref.org)
 [![MinerU](https://img.shields.io/badge/MinerU-PDF%20Conversion-red?style=flat-square)](https://github.com/opendatalab/MinerU)
 
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Supported-8B5CF6?style=flat-square)](#supported-agents)
@@ -50,8 +49,6 @@
 [![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-Supported-8B5CF6?style=flat-square)](#supported-agents)
 [![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Supported-8B5CF6?style=flat-square)](#supported-agents)
 [![Copilot](https://img.shields.io/badge/Copilot-Supported-8B5CF6?style=flat-square)](#supported-agents)
-[![Windsurf](https://img.shields.io/badge/Windsurf-Supported-8B5CF6?style=flat-square)](#supported-agents)
-[![Zed](https://img.shields.io/badge/Zed-Supported-8B5CF6?style=flat-square)](#supported-agents)
 
 [**English**](README.md) · [**简体中文**](README_CN.md)
 
