@@ -39,9 +39,12 @@ class BatchCheckpoint:
                 self._cache = {}
 
     def _save(self) -> None:
-        """Save memory cache to checkpoint file."""
+        """Save memory cache to checkpoint file atomically."""
         self._ensure_dir()
-        self._path.write_text(json.dumps(self._cache, indent=2))
+        # Write to temp file in same directory, then atomic rename
+        tmp_path = self._path.with_suffix(".tmp")
+        tmp_path.write_text(json.dumps(self._cache, indent=2))
+        tmp_path.replace(self._path)
 
     def _ensure_dir(self) -> None:
         """Ensure checkpoint directory exists."""
@@ -82,7 +85,8 @@ class BatchCheckpoint:
         Returns:
             True if paper was already processed.
         """
-        return paper_id in self.get_processed(batch_id)
+        with self._lock:
+            return paper_id in self._cache.get(batch_id, [])
 
     def clear(self, batch_id: str) -> None:
         """Clear checkpoint for a batch.
