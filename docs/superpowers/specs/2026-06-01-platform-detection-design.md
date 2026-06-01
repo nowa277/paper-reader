@@ -48,6 +48,11 @@ class PlatformInfo:
     # macOS specific
     macos_version: Optional[tuple] = None  # (13, 2, 0) for Ventura
     
+    # Windows specific
+    shell: Optional[str] = None       # 'powershell' | 'cmd' | 'pwsh'
+    shell_version: Optional[str] = None  # e.g., '5.1.22621.1'
+    windows_version: Optional[str] = None  # e.g., '10.0.22621' (build number)
+    
     @property
     def is_linux(self) -> bool:
         return self.platform == "linux"
@@ -63,6 +68,16 @@ class PlatformInfo:
     @property
     def is_unknown(self) -> bool:
         return self.platform == "unknown"
+    
+    @property
+    def is_powershell(self) -> bool:
+        """Check if running in PowerShell (including PowerShell Core)."""
+        return self.shell in ("powershell", "pwsh")
+    
+    @property
+    def is_cmd(self) -> bool:
+        """Check if running in Windows CMD."""
+        return self.shell == "cmd"
 ```
 
 ---
@@ -93,7 +108,9 @@ def detect_platform() -> PlatformInfo:
         _detect_wsl(result)
     elif result.is_macos:
         _detect_macos_version(result)
-    # Windows - no additional detection needed
+    elif result.is_windows:
+        _detect_windows_shell(result)
+        result.windows_version = _get_windows_version()
     
     return result
 ```
@@ -174,6 +191,80 @@ def _detect_macos_version(info: PlatformInfo) -> None:
         pass
 ```
 
+#### Windows Shell Detection (PowerShell/CMD)
+
+```python
+def _detect_windows_shell(info: PlatformInfo) -> None:
+    """Detect Windows shell environment (PowerShell, CMD, PowerShell Core)."""
+    import os
+    
+    # Check PSModulePath for PowerShell
+    psmodule_path = os.environ.get("PSModulePath", "")
+    
+    # Check PROMPT for CMD (CMD sets PROMPT variable)
+    prompt = os.environ.get("PROMPT", "")
+    
+    # Check PowerShell specific variables
+    psversiontable = os.environ.get("PSVersionTable", "")
+    psedition = os.environ.get("PSEdition", "")
+    
+    if psversiontable or psedition or "PowerShell" in psmodule_path:
+        # Determine PowerShell vs PowerShell Core
+        if os.environ.get("PSModulePath", "").startswith("C:\\Program Files\\PowerShell\\"):
+            info.shell = "pwsh"  # PowerShell Core (7+)
+            info.shell_version = _get_pwsh_version()
+        else:
+            info.shell = "powershell"  # Windows PowerShell (5.1)
+            info.shell_version = _get_powershell_version()
+    elif prompt:
+        info.shell = "cmd"
+        info.shell_version = _get_cmd_version()
+    else:
+        info.shell = "unknown"
+
+def _get_powershell_version() -> str | None:
+    """Get Windows PowerShell version."""
+    try:
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", "$PSVersionTable.PSVersion.ToString()"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return None
+
+def _get_pwsh_version() -> str | None:
+    """Get PowerShell Core version."""
+    try:
+        result = subprocess.run(
+            ["pwsh", "-NoProfile", "-Command", "$PSVersionTable.PSVersion.ToString()"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return None
+
+def _get_windows_version() -> str | None:
+    """Get Windows version/build number."""
+    try:
+        result = subprocess.run(
+            ["cmd", "/c", "ver"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0:
+            # Parse "Microsoft Windows [Version 10.0.22621.1]"
+            match = re.search(r"Version\s+([\d.]+)", result.stdout)
+            if match:
+                return match.group(1)
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return None
+```
+
 ---
 
 ## Backward Compatibility
@@ -206,6 +297,9 @@ def is_wsl() -> bool:
 | WSL on older kernel | Falls back to `WSL_DISTRO_NAME` check |
 | macOS without version | Returns None for macos_version |
 | Windows WSL | Reports WSL version correctly |
+| Windows without PowerShell | Falls back to CMD detection |
+| PowerShell Core not installed | Returns None for shell_version |
+| Running in non-interactive shell | Uses environment variables for detection |
 
 ---
 
@@ -224,11 +318,12 @@ def is_wsl() -> bool:
 
 ## Implementation Order
 
-1. Create PlatformInfo dataclass
+1. Create PlatformInfo dataclass (including Windows fields)
 2. Implement `detect_platform()` main function
 3. Implement Linux-specific detection
-4. Implement WSL version detection
+4. Implement WSL version detection (enhanced)
 5. Implement macOS version detection
-6. Add backward-compatible wrapper functions
-7. Add comprehensive tests
-8. Verify all existing tests still pass
+6. Implement Windows shell detection (PowerShell/CMD)
+7. Add backward-compatible wrapper functions
+8. Add comprehensive tests
+9. Verify all existing tests still pass
