@@ -52,6 +52,8 @@
 
 [**English**](README.md) · [**简体中文**](README_CN.md)
 
+![Paper Reader Hero Banner](hero-banner.png)
+
 </div>
 
 ---
