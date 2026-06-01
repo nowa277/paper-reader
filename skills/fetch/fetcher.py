@@ -228,3 +228,32 @@ def search_and_fetch(
         "results": [r.display_name for r in results],
         "count": len(results),
     }
+
+
+def search_and_analyze(topic: str, max_results: int = 10) -> dict:
+    """Search papers and prepare for user selection and analysis.
+
+    This function performs Step 1 of the fetch+analyze workflow:
+    1. Search papers from multiple sources
+    2-3. User selection and analysis are handled by the agent via SKILL.md prompts
+
+    Args:
+        topic: Search topic/keywords
+        max_results: Maximum papers to search per source
+
+    Returns:
+        Dict with keys:
+            - search_results: List of PaperResult from search
+            - selected: List of selected paper IDs (filled by user)
+            - analysis_results: Dict mapping paper_id to AnalysisResult (filled after analysis)
+    """
+    from skills.fetch.searcher import search_papers
+
+    # Step 1: Search papers
+    search_results = search_papers(topic, max_results=max_results)
+
+    return {
+        "search_results": search_results,
+        "selected": [],  # User fills this
+        "analysis_results": {},
+    }
