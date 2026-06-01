@@ -7,9 +7,57 @@ and whether the process is running under Windows Subsystem for Linux.
 import logging
 import platform
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class PlatformInfo:
+    """Comprehensive platform information."""
+
+    # Core platform
+    platform: str = "unknown"
+    distro: Optional[str] = None
+    distro_version: Optional[str] = None
+
+    # WSL detection
+    is_wsl: bool = False
+    wsl_version: Optional[int] = None
+
+    # macOS specific
+    macos_version: Optional[tuple] = None
+
+    # Windows specific
+    shell: Optional[str] = None
+    shell_version: Optional[str] = None
+    windows_version: Optional[str] = None
+
+    @property
+    def is_linux(self) -> bool:
+        return self.platform == "linux"
+
+    @property
+    def is_macos(self) -> bool:
+        return self.platform == "macos"
+
+    @property
+    def is_windows(self) -> bool:
+        return self.platform == "windows"
+
+    @property
+    def is_unknown(self) -> bool:
+        return self.platform == "unknown"
+
+    @property
+    def is_powershell(self) -> bool:
+        return self.shell in ("powershell", "pwsh")
+
+    @property
+    def is_cmd(self) -> bool:
+        return self.shell == "cmd"
 
 
 def get_platform() -> str:

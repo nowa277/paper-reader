@@ -87,5 +87,81 @@ class TestIsWSL:
         assert result is True
 
 
+class TestPlatformInfo:
+    """Tests for PlatformInfo dataclass."""
+
+    def test_platform_info_dataclass(self):
+        """Test PlatformInfo can be instantiated with all fields."""
+        PlatformInfo = platform_detection.PlatformInfo
+
+        info = PlatformInfo(
+            platform="linux",
+            distro="ubuntu",
+            distro_version="22.04",
+            is_wsl=True,
+            wsl_version=2,
+            macos_version=None,
+            shell=None,
+            shell_version=None,
+            windows_version=None,
+        )
+
+        assert info.platform == "linux"
+        assert info.distro == "ubuntu"
+        assert info.is_wsl is True
+        assert info.wsl_version == 2
+        assert info.is_linux is True
+        assert info.is_powershell is False
+        assert info.is_cmd is False
+
+    def test_is_macos_property(self):
+        """Test is_macos property."""
+        PlatformInfo = platform_detection.PlatformInfo
+        info = PlatformInfo(platform="macos")
+        assert info.is_macos is True
+        assert info.is_linux is False
+
+    def test_is_windows_property(self):
+        """Test is_windows property."""
+        PlatformInfo = platform_detection.PlatformInfo
+        info = PlatformInfo(platform="windows")
+        assert info.is_windows is True
+        assert info.is_unknown is False
+
+    def test_is_unknown_property(self):
+        """Test is_unknown property."""
+        PlatformInfo = platform_detection.PlatformInfo
+        info = PlatformInfo(platform="unknown")
+        assert info.is_unknown is True
+
+    def test_is_powershell_property(self):
+        """Test is_powershell detects both powershell and pwsh."""
+        PlatformInfo = platform_detection.PlatformInfo
+        info_pwsh = PlatformInfo(platform="windows", shell="pwsh")
+        info_ps = PlatformInfo(platform="windows", shell="powershell")
+        assert info_pwsh.is_powershell is True
+        assert info_ps.is_powershell is True
+
+    def test_is_cmd_property(self):
+        """Test is_cmd property."""
+        PlatformInfo = platform_detection.PlatformInfo
+        info = PlatformInfo(platform="windows", shell="cmd")
+        assert info.is_cmd is True
+
+    def test_default_values(self):
+        """Test PlatformInfo has sensible defaults."""
+        PlatformInfo = platform_detection.PlatformInfo
+        info = PlatformInfo()
+        assert info.platform == "unknown"
+        assert info.distro is None
+        assert info.distro_version is None
+        assert info.is_wsl is False
+        assert info.wsl_version is None
+        assert info.macos_version is None
+        assert info.shell is None
+        assert info.shell_version is None
+        assert info.windows_version is None
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
