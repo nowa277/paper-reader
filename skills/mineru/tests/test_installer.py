@@ -203,6 +203,25 @@ class TestInstallMineru:
         assert result["success"] is True
         mock_cm.set.assert_any_call("mineru.installed", True)
 
+    def test_install_mineru_reports_elapsed_time(self):
+        """install_mineru returns elapsed_seconds in result."""
+        cm = self._make_config_manager()
+        pip_result = MagicMock()
+        pip_result.returncode = 0
+        pip_result.stdout = "Successfully installed mineru-1.0.0"
+        pip_result.stderr = ""
+
+        detection = {"installed": True, "path": "/usr/bin/magic-pdf", "version": "1.0.0"}
+        with patch.object(installer, "check_python_version", return_value=(True, "ok")):
+            with patch.object(installer, "_resolve_pip_command", return_value="pip3"):
+                with patch("subprocess.run", return_value=pip_result):
+                    with patch.object(installer, "verify_installation", return_value=detection):
+                        result = install_mineru(user_consent=True, config_manager=cm)
+
+        assert "elapsed_seconds" in result
+        assert isinstance(result["elapsed_seconds"], float)
+        assert result["elapsed_seconds"] >= 0
+
     def test_uses_pip3_command(self):
         cm = self._make_config_manager()
         pip_result = MagicMock()

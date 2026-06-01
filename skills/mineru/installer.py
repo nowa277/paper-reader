@@ -8,6 +8,7 @@ verification.
 import logging
 import subprocess
 import sys
+import time
 from shutil import which
 
 from skills.config.config_manager import ConfigManager
@@ -63,12 +64,17 @@ def install_mineru(
           - ``success`` (bool): whether installation succeeded
           - ``message`` (str): human-readable result description
           - ``detection`` (dict): result of :func:`verify_installation`
+          - ``elapsed_seconds`` (float): time spent in this function
     """
+    start_time = time.time()
+
     if not user_consent:
+        elapsed = time.time() - start_time
         return {
             "success": False,
             "message": "User confirmation is required before installing MinerU. Pass user_consent=True to proceed.",
             "detection": verify_installation(),
+            "elapsed_seconds": elapsed,
         }
 
     # Python version gate
@@ -93,23 +99,28 @@ def install_mineru(
                 timeout=300,
             )
         except subprocess.TimeoutExpired:
+            elapsed = time.time() - start_time
             msg = "pip install mineru timed out after 300 seconds"
             logger.error(msg)
             return {
                 "success": False,
                 "message": msg,
                 "detection": verify_installation(),
+                "elapsed_seconds": elapsed,
             }
         except OSError as exc:
+            elapsed = time.time() - start_time
             msg = f"Failed to run pip install: {exc}"
             logger.error(msg)
             return {
                 "success": False,
                 "message": msg,
                 "detection": verify_installation(),
+                "elapsed_seconds": elapsed,
             }
 
         if result.returncode != 0:
+            elapsed = time.time() - start_time
             stderr = result.stderr.strip()
             msg = f"pip install mineru failed (exit {result.returncode}): {stderr}"
             logger.error(msg)
@@ -117,6 +128,7 @@ def install_mineru(
                 "success": False,
                 "message": msg,
                 "detection": verify_installation(),
+                "elapsed_seconds": elapsed,
             }
 
     # Verify installation
@@ -137,10 +149,14 @@ def install_mineru(
         message = "MinerU pip install completed but verification could not find the installation"
         logger.warning(message)
 
+    elapsed = time.time() - start_time
+    logger.info(f"MinerU processing completed in {elapsed:.1f} seconds")
+
     return {
         "success": detection["installed"],
         "message": message,
         "detection": detection,
+        "elapsed_seconds": elapsed,
     }
 
 
