@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paper-reader"
+version = "0.1.0"
+description = "Intelligent academic paper analysis tool for AI coding agents"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31.0",
+    "psutil>=5.9.0",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/nowa277/paper-reader"
+Repository = "https://github.com/nowa277/paper-reader"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["skills*", "agent_adapters*", "tests*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.yaml", "*.yml"]
