@@ -9,6 +9,8 @@
 
 | 日期 | 操作 | 描述 |
 |------|------|------|
+| 2026-06-01 | 更新 | P3 Q&A日志持久化完成 |
+| 2026-06-01 | 更新 | Phase 2 完成：9个Agent适配器全部实现 |
 | 2026-06-01 | 更新 | 根据 Phase 1 实现更新状态，将已解决问题移入 TODO 清单 |
 
 ---
@@ -92,18 +94,14 @@
 | Agent | 之前 | 现在 | 状态 |
 |-------|------|------|------|
 | **Claude Code** | ⚠️ 简化版 | ✅ 完整 SKILL.md | ✅ |
-
----
-
-### 待处理 🔴
-
-| Agent | 适配状态 | 优先级 |
-| ------| -------- | ------|
-| **Cursor** | ❌ 无适配 | P3 |
-| **Windsurf** | ❌ 无适配 | P3 |
-| **Zed** | ❌ 无适配 | P3 |
-| **Copilot CLI** | ❌ 无适配 | P3 |
-| **Gemini CLI** | ❌ 无适配 | P3 |
+| **Cursor** | ❌ 无适配 | ✅ cursor_rules.j2 模板 | ✅ |
+| **Windsurf** | ❌ 无适配 | ✅ generate_skill_file 实现 | ✅ |
+| **Zed** | ❌ 无适配 | ✅ zed_md.j2 模板 | ✅ |
+| **Copilot CLI** | ❌ 无适配 | ✅ generate_skill_file 实现 | ✅ |
+| **Gemini CLI** | ❌ 无适配 | ✅ generate_skill_file 实现 | ✅ |
+| **Hermes (agentskills.io)** | ❌ 无适配 | ✅ hermes_yaml.j2 模板 | ✅ |
+| **OpenCode** | ❌ 无适配 | ✅ opencode_json.j2 模板 | ✅ |
+| **Codex** | ❌ 无适配 | ✅ generate_skill_file 实现 | ✅ |
 
 ---
 
@@ -203,7 +201,8 @@
 
 ### 🟢 P3 - 低优先级
 
-- [ ] 新增 Agent 适配器模板 (Cursor, Windsurf, Zed, etc.)
+- [x] 新增 Agent 适配器模板 (Cursor, Windsurf, Zed, etc.) ✅
+- [x] 添加 Q&A 日志持久化 ✅
 - [ ] 添加版本管理/回退功能
 - [ ] 添加操作撤销机制
 - [ ] 添加 Q&A 日志持久化
@@ -245,6 +244,43 @@
    - 完整 SKILL.md
    - 设计文档 (`docs/superpowers/specs/`)
    - 实现计划 (`docs/superpowers/plans/`)
+
+---
+
+## Phase 2 完成总结
+
+**完成日期:** 2026-06-01
+
+**已实现功能:**
+
+1. ✅ **Agent 适配器架构**
+   - `agent_adapters/base.py` - BaseAdapter 抽象基类 + AdapterConfig 数据类
+   - `agent_adapters/registry.py` - Registry 注册中心模式
+   - `agent_adapters/generator.py` - Generator 基于 Jinja2 模板生成文件
+
+2. ✅ **9个Agent适配器全部实现**
+   - ClaudeAdapter - Claude Code
+   - HermesAdapter - agentskills.io (YAML格式)
+   - CodexAdapter - OpenAI Codex
+   - OpenCodeAdapter - OpenCode (JSON格式)
+   - CursorAdapter - Cursor (cursor_rules.j2)
+   - WindsurfAdapter - Windsurf
+   - ZedAdapter - Zed (zed_md.j2)
+   - CopilotAdapter - GitHub Copilot CLI
+   - GeminiAdapter - Google Gemini CLI
+
+3. ✅ **Jinja2 模板系统**
+   - `templates/skill_md.j2` - 通用技能Markdown
+   - `templates/agents_md.j2` - Agent列表
+   - `templates/hermes_yaml.j2` - Hermes YAML格式
+   - `templates/opencode_json.j2` - OpenCode JSON格式
+   - `templates/cursor_rules.j2` - Cursor规则
+   - `templates/zed_md.j2` - Zed Markdown
+
+4. ✅ **代码审查修复**
+   - HermesAdapter 使用模板处理 skill_source 参数
+   - 所有适配器 import json 移至模块级别
+   - 添加适当的文档字符串
 
 ---
 
