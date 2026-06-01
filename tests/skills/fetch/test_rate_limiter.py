@@ -59,7 +59,8 @@ class TestRateLimiterAcquire:
 class TestRateLimiterState:
     """Tests for internal state tracking."""
 
-    def test_window_start_initialized(self):
-        """Window start is initialized on first use."""
+    def test_request_times_initialized(self):
+        """Request times list is initialized on first use."""
         limiter = RateLimiter()
-        assert limiter._window_start is not None
+        assert limiter._request_times == []
+        assert limiter._rpm == 20

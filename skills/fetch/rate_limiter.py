@@ -18,7 +18,6 @@ class RateLimiter:
         self._rpm = rpm
         self._window_seconds = window_seconds
         self._lock = threading.Lock()
-        self._window_start = time.time()
         self._request_times: list[float] = []
 
     def acquire(self) -> None:
@@ -26,26 +25,25 @@ class RateLimiter:
 
         Blocks if the rate limit would be exceeded.
         """
-        with self._lock:
-            now = time.time()
+        while True:
+            with self._lock:
+                now = time.time()
 
-            # Remove requests outside the window
-            cutoff = now - self._window_seconds
-            self._request_times = [t for t in self._request_times if t > cutoff]
+                # Remove requests outside the window
+                cutoff = now - self._window_seconds
+                self._request_times = [t for t in self._request_times if t > cutoff]
 
-            if len(self._request_times) >= self._rpm:
+                if len(self._request_times) < self._rpm:
+                    self._request_times.append(now)
+                    return
+
                 # Need to wait until oldest request exits window
                 oldest = self._request_times[0]
                 wait_time = oldest + self._window_seconds - now
-                if wait_time > 0:
-                    time.sleep(wait_time)
-                    # Recalculate after wait
-                    now = time.time()
-                    cutoff = now - self._window_seconds
-                    self._request_times = [t for t in self._request_times if t > cutoff]
-                    self._window_start = now
 
-            self._request_times.append(now)
+            # Sleep outside the lock to avoid blocking other threads
+            if wait_time > 0:
+                time.sleep(wait_time)
 
     def __enter__(self) -> "RateLimiter":
         self.acquire()
