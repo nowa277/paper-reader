@@ -1,0 +1,15 @@
+{# opencode_json.j2 - OpenCode JSON #}
+{
+  "name": "{{ skill_name }}",
+  "description": "{{ description }}",
+  "commands": [
+{% for command in commands %}
+    {
+      "name": "{{ command.name }}",
+      "description": "{{ command.description }}",
+      "usage": "{{ command.usage }}"
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+  ],
+  "triggers": [{% for t in triggers %}"{{ t }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+}

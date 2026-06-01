@@ -1,0 +1,18 @@
+{# zed_md.j2 - Zed zed.md #}
+# {{ skill_name }}
+
+## 概述
+
+{{ skill_content }}
+
+## 使用方式
+
+```
+{{ command_prefix }} <命令> [参数]
+```
+
+## 可用命令
+
+{% for command in commands %}
+- `{{ command.name }}`: {{ command.description }}
+{% endfor %}

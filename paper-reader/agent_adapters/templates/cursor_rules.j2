@@ -1,0 +1,16 @@
+{# cursor_rules.j2 - Cursor .cursorrules #}
+# {{ skill_name }}
+
+## 概述
+
+{{ skill_content }}
+
+## 命令
+
+{% for command in commands %}
+### {{ command.name }}
+
+{{ command.description }}
+
+用法: `{{ command.usage }}`
+{% endfor %}

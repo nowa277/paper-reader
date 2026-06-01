@@ -1,0 +1,16 @@
+{# skill_md.j2 - Claude Code SKILL.md #}
+# {{ skill_name }}
+
+{{ skill_content }}
+
+## 使用方式
+
+```
+{{ command_prefix }} <命令> [参数]
+```
+
+## 可用命令
+
+{% for command in commands %}
+- `{{ command_prefix }} {{ command.name }}` - {{ command.description }}
+{% endfor %}
