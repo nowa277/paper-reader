@@ -58,8 +58,9 @@ class TestGetMissingRequired:
     def test_returns_list_of_strings(self):
         """Returns list of missing required dependency IDs."""
         with patch("skills.config.system_deps.check_dependency") as mock_check:
-            mock_check.return_value = (False, "not found")
+            mock_check.side_effect = lambda dep_id: (False, "not found") if dep_id == "curl" else (True, "installed")
             missing = get_missing_required()
+            assert missing == ["curl"]
             assert isinstance(missing, list)
             assert all(isinstance(d, str) for d in missing)
 

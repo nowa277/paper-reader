@@ -49,7 +49,7 @@ def check_dependency(dep_id: str) -> tuple[bool, Optional[str]]:
                 capture_output=True, text=True, timeout=10
             )
             if result.returncode == 0:
-                version_line = result.stdout.split('\n')[0]
+                version_line = result.stdout.split('\n')[0] if result.stdout.strip() else "Unknown version"
                 return True, version_line[:100]
             return True, "Installed (version check failed)"
         except (OSError, subprocess.TimeoutExpired):
@@ -89,8 +89,8 @@ def get_missing_required() -> list[str]:
 def get_installation_instructions(dep_id: str) -> str:
     """Get installation instructions for a dependency."""
     instructions = {
-        "curl": "Ubuntu/Debian: sudo apt install curl",
-        "pandoc": "Ubuntu/Debian: sudo apt install pandoc",
-        "tesseract": "Ubuntu/Debian: sudo apt install tesseract-ocr",
+        "curl": "Ubuntu/Debian: sudo apt install curl | macOS: brew install curl",
+        "pandoc": "Ubuntu/Debian: sudo apt install pandoc | macOS: brew install pandoc",
+        "tesseract": "Ubuntu/Debian: sudo apt install tesseract-ocr | macOS: brew install tesseract",
     }
     return instructions.get(dep_id, f"Install {dep_id} using your system's package manager")
