@@ -2,6 +2,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 from .base import BaseAdapter, GenerationResult
 from .registry import Registry
+import json
 
 
 class Generator:
@@ -48,3 +49,13 @@ class Generator:
         (output_path / "config.json").write_text(config_content)
 
         return str(output_path)
+
+    def render_hermes_template(self, context: dict) -> str:
+        """Render Hermes YAML template with given context."""
+        template = self.env.get_template("hermes_yaml.j2")
+        return template.render(**context)
+
+    def render_skill_md_template(self, context: dict) -> str:
+        """Render SKILL.md template with given context."""
+        template = self.env.get_template("skill_md.j2")
+        return template.render(**context)

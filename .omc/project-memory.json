@@ -1,0 +1,257 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1780303654466,
+  "projectRoot": "/home/user/obsidian/AI/claude code/paper-reader-skill-optimize",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "cd /home/user/obsidian/AI/claude\\ code/paper-reader-skill-optimize/paper-reader && PYTHONPATH=. python3 -m pytest tests/agent_adapters/ -v 2>&1 | head -100",
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1780303654461,
+      "keyFiles": []
+    },
+    "paper-reader": {
+      "path": "paper-reader",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1780303654461,
+      "keyFiles": [
+        "SKILL.md",
+        "config.json",
+        "main_skill.py"
+      ]
+    },
+    "referrence_repo": {
+      "path": "referrence_repo",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1780303654462,
+      "keyFiles": [
+        "paper-reader-skill-analysis.md"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "paper-reader/agent_adapters/registry.py",
+      "accessCount": 11,
+      "lastAccessed": 1780305286749,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/tests/agent_adapters/test_registry.py",
+      "accessCount": 9,
+      "lastAccessed": 1780304384602,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/tests/agent_adapters/test_generator.py",
+      "accessCount": 8,
+      "lastAccessed": 1780304684875,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-01-agent-adapter-plan.md",
+      "accessCount": 7,
+      "lastAccessed": 1780303987451,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/tests/agent_adapters/test_base.py",
+      "accessCount": 7,
+      "lastAccessed": 1780304831852,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/tests/conftest.py",
+      "accessCount": 6,
+      "lastAccessed": 1780304837383,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/base.py",
+      "accessCount": 6,
+      "lastAccessed": 1780305486808,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/generator.py",
+      "accessCount": 5,
+      "lastAccessed": 1780305462097,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/hermes.py",
+      "accessCount": 5,
+      "lastAccessed": 1780305519525,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/codex.py",
+      "accessCount": 4,
+      "lastAccessed": 1780305506192,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/cursor.py",
+      "accessCount": 4,
+      "lastAccessed": 1780305508115,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/claude.py",
+      "accessCount": 4,
+      "lastAccessed": 1780305516218,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/zed.py",
+      "accessCount": 4,
+      "lastAccessed": 1780305547704,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/tests/agent_adapters/conftest.py",
+      "accessCount": 3,
+      "lastAccessed": 1780304831524,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/__init__.py",
+      "accessCount": 3,
+      "lastAccessed": 1780305304943,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/__init__.py",
+      "accessCount": 3,
+      "lastAccessed": 1780305305565,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/templates/skill_md.j2",
+      "accessCount": 3,
+      "lastAccessed": 1780305428980,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/templates/hermes_yaml.j2",
+      "accessCount": 3,
+      "lastAccessed": 1780305429575,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/opencode.py",
+      "accessCount": 3,
+      "lastAccessed": 1780305533984,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/windsurf.py",
+      "accessCount": 3,
+      "lastAccessed": 1780305537806,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/copilot.py",
+      "accessCount": 3,
+      "lastAccessed": 1780305541103,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/adapters/gemini.py",
+      "accessCount": 3,
+      "lastAccessed": 1780305544402,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/conftest.py",
+      "accessCount": 2,
+      "lastAccessed": 1780304608617,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/templates/agents_md.j2",
+      "accessCount": 2,
+      "lastAccessed": 1780305300173,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/templates/cursor_rules.j2",
+      "accessCount": 2,
+      "lastAccessed": 1780305300632,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/templates/opencode_json.j2",
+      "accessCount": 2,
+      "lastAccessed": 1780305301061,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/agent_adapters/templates/zed_md.j2",
+      "accessCount": 2,
+      "lastAccessed": 1780305301449,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/skills/config/tests/test_platform.py",
+      "accessCount": 1,
+      "lastAccessed": 1780303905333,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-01-paper-reader-agent-adapter-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1780303987355,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1780304002462,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/scripts/generate_adapters.sh",
+      "accessCount": 1,
+      "lastAccessed": 1780304013062,
+      "type": "file"
+    },
+    {
+      "path": "paper-reader/pytest.ini",
+      "accessCount": 1,
+      "lastAccessed": 1780304338881,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

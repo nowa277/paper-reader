@@ -1,0 +1,7 @@
+{
+  "tool_name": "mcp__plugin_oh-my-claudecode_t__lsp_diagnostics",
+  "tool_input_preview": "{\"file\":\"/home/user/obsidian/AI/claude code/paper-reader-skill-optimize/paper-reader/agent_adapters/generator.py\"}",
+  "error": "Language server 'ty' not found.\nInstall with: Install ty from https://github.com/astral-sh/ty",
+  "timestamp": "2026-06-01T09:15:07.533Z",
+  "retry_count": 3
+}

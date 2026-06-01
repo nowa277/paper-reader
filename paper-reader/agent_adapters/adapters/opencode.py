@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from ..base import BaseAdapter, AdapterConfig
 
@@ -15,7 +16,6 @@ class OpenCodeAdapter(BaseAdapter):
         )
 
     def generate_skill_file(self, skill_source: str) -> str:
-        import json
         return json.dumps({
             "name": "paper-reader",
             "description": "Academic paper analysis skill",
@@ -23,7 +23,6 @@ class OpenCodeAdapter(BaseAdapter):
         }, indent=2)
 
     def generate_config_file(self, config: dict) -> str:
-        import json
         return json.dumps({"skill": "paper-reader", "config": config}, indent=2)
 
     def detect_installation(self) -> bool:

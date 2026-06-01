@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from ..base import BaseAdapter, AdapterConfig
 
@@ -27,7 +28,6 @@ class ClaudeAdapter(BaseAdapter):
 """
 
     def generate_config_file(self, config: dict) -> str:
-        import json
         return json.dumps({
             "skill": "paper-reader",
             "version": "1.0.0",

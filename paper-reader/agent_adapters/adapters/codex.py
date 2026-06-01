@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from ..base import BaseAdapter, AdapterConfig
 
@@ -37,7 +38,6 @@ class CodexAdapter(BaseAdapter):
 """
 
     def generate_config_file(self, config: dict) -> str:
-        import json
         return json.dumps({"skill": "paper-reader", "config": config}, indent=2)
 
     def detect_installation(self) -> bool:

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from ..base import BaseAdapter, AdapterConfig
 
@@ -29,10 +30,10 @@ class ZedAdapter(BaseAdapter):
 """
 
     def generate_config_file(self, config: dict) -> str:
-        import json
         return json.dumps({"skill": "paper-reader", "config": config}, indent=2)
 
     def detect_installation(self) -> bool:
+        # Zed uses .zed/zed.md in project directories (CWD-relative for project-level detection)
         return Path(".zed").exists()
 
     def get_installation_instructions(self) -> str:
