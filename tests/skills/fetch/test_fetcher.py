@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, PropertyMock
 from skills.fetch.fetcher import ensure_dir, download_with_space_check, fetch_paper
 
 
@@ -34,11 +34,15 @@ class TestDownloadWithSpaceCheck:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
         mock_response.headers = {"Content-Length": "1024"}
-        mock_response.iter_content = MagicMock(return_value=[b"test content"])
+        # Use PropertyMock so response.raw returns the same mock each time
+        mock_raw = MagicMock()
+        mock_raw.read = MagicMock(side_effect=[b"test content", b""])
+        type(mock_response).raw = PropertyMock(return_value=mock_raw)
 
         with patch("requests.get", return_value=mock_response):
             result = download_with_space_check("http://example.com/test.pdf", output)
             assert output.exists()
+            assert output.read_bytes() == b"test content"
 
 
 class TestFetchPaper:

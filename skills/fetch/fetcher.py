@@ -74,9 +74,7 @@ def download_with_space_check(url: str, output_path: Path) -> Path:
             raise OSError(f"Insufficient disk space to download {url}")
 
     with open(output_path, "wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            if chunk:
-                f.write(chunk)
+        shutil.copyfileobj(response.raw, f, length=8192)
 
     return output_path
 
