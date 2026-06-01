@@ -45,14 +45,15 @@ class TestRateLimiterAcquire:
             limiter.acquire()
             results.append(time.time() - start)
 
-        threads = [threading.Thread(target=worker) for _ in range(10)]
+        # 20 threads exceeding rpm=10 limit — last 10 must wait
+        threads = [threading.Thread(target=worker) for _ in range(20)]
         for t in threads:
             t.start()
         for t in threads:
             t.join()
 
         # Last few requests should have waited
-        assert max(results) > 0.05
+        assert max(results) > 0.5
 
 
 class TestRateLimiterState:
