@@ -2,10 +2,26 @@
 import concurrent.futures
 from typing import Optional
 from .models import PaperResult
+from .rate_limiter import RateLimiter
 from .sources.arxiv import search_arxiv
 from .sources.pubmed import search_pubmed
 from .sources.semantic_scholar import search_semantic_scholar
 from .sources.crossref import search_crossref
+
+# 全局速率限制器: 每个源每分钟 10 个请求
+_search_limiters = {
+    "arxiv": RateLimiter(rpm=10),
+    "pubmed": RateLimiter(rpm=10),
+    "semantic_scholar": RateLimiter(rpm=10),
+    "crossref": RateLimiter(rpm=10),
+}
+
+def _rate_limited_search(source: str, search_func, *args, **kwargs):
+    """带速率限制的搜索"""
+    limiter = _search_limiters.get(source)
+    if limiter:
+        limiter.acquire()
+    return search_func(*args, **kwargs)
 
 DOMAIN_KEYWORDS = {
     "cs": ["machine learning", "neural network", "deep learning", "attention", "transformer", "AI"],
@@ -47,7 +63,7 @@ def search_papers(
     all_results = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {
-            executor.submit(source_search, query, max_results): source
+            executor.submit(_rate_limited_search, source, source_search, query, max_results): source
             for source, source_search in sources_to_search
         }
         for future in concurrent.futures.as_completed(futures):

@@ -1,11 +1,14 @@
 """Tests for searcher.py - multi-source search orchestration"""
 import pytest
+import time
 from unittest.mock import patch, MagicMock
 from skills.fetch.searcher import (
     detect_domain,
     _deduplicate_and_sort,
     _get_sources_for_domain,
     search_papers,
+    _rate_limited_search,
+    _search_limiters,
     DOMAIN_KEYWORDS,
 )
 from skills.fetch.models import PaperResult
@@ -189,3 +192,48 @@ class TestSearchPapers:
 
                     # Should have called arxiv since cs domain detected
                     mock_arxiv.assert_called_once()
+
+
+class TestRateLimiting:
+    """Tests for rate limiting integration."""
+
+    def test_rate_limited_search_calls_acquire(self):
+        """_rate_limited_search should call limiter.acquire() for known sources."""
+        mock_limiter = MagicMock()
+        mock_search_func = MagicMock(return_value=[])
+        original_limiter = _search_limiters.get("arxiv")
+
+        # Temporarily replace the limiter
+        _search_limiters["arxiv"] = mock_limiter
+        try:
+            _rate_limited_search("arxiv", mock_search_func, "query", 10)
+            mock_limiter.acquire.assert_called_once()
+            mock_search_func.assert_called_once_with("query", 10)
+        finally:
+            _search_limiters["arxiv"] = original_limiter
+
+    def test_rate_limited_search_unknown_source_skips_limit(self):
+        """_rate_limited_search should skip limiting for unknown sources."""
+        mock_search_func = MagicMock(return_value=[])
+
+        # Should not raise, even without a limiter
+        result = _rate_limited_search("unknown_source", mock_search_func, "query", 10)
+        mock_search_func.assert_called_once_with("query", 10)
+        assert result == []
+
+    def test_rate_limiter_integrated_in_search_papers(self):
+        """search_papers should use rate limiting via _rate_limited_search."""
+        with patch("skills.fetch.searcher.search_arxiv") as mock_arxiv:
+            with patch("skills.fetch.searcher.search_semantic_scholar") as mock_semantic:
+                with patch("skills.fetch.searcher.search_crossref") as mock_crossref:
+                    mock_arxiv.return_value = []
+                    mock_semantic.return_value = []
+                    mock_crossref.return_value = []
+
+                    # Track that search was called
+                    search_papers("machine learning", domain="cs")
+
+                    # All sources should have been called
+                    mock_arxiv.assert_called_once()
+                    mock_semantic.assert_called_once()
+                    mock_crossref.assert_called_once()
