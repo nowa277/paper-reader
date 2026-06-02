@@ -1,0 +1,27 @@
+{# hermes_yaml.j2 - Hermes YAML (agentskills.io format) #}
+name: {{ skill_name }}
+description: {{ description }}
+version: 1.0.0
+
+triggers:
+{% for trigger in triggers %}
+  - {{ trigger }}
+{% endfor %}
+
+commands:
+{% for command in commands %}
+  - name: {{ command.name }}
+    description: {{ command.description }}
+    arguments:
+{% for arg in command.arguments %}
+      - name: {{ arg.name }}
+        type: {{ arg.type }}
+        required: {{ arg.required }}
+        description: {{ arg.description }}
+{% endfor %}
+{% endfor %}
+
+permissions:
+  - filesystem:read
+  - filesystem:write
+  - network:fetch
