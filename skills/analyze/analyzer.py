@@ -13,10 +13,19 @@ DEFAULT_OUTPUT_DIR = Path.home() / ".paper-reader" / "outputs"
 
 
 class AnalysisLevel(Enum):
-    """Analysis depth levels."""
-    A = "A"  # Basic: summary + key findings
-    B = "B"  # Complete: + methodology + figures + related work
-    C = "C"  # Deep: + limitations + trends + reproducibility
+    """Analysis depth levels.
+
+    v1.0 A/B/C: legacy, method-light summarization.
+    v2.0 L1-L4: method-driven, decision-framework-backed granularity.
+    Both coexist for backward compatibility.
+    """
+    A = "A"  # v1.0 legacy: basic — summary + key findings
+    B = "B"  # v1.0 legacy: complete — + methodology + figures + related work
+    C = "C"  # v1.0 legacy: deep — + limitations + trends + reproducibility
+    L1 = "L1"  # v2.0: concepts only
+    L2 = "L2"  # v2.0: concepts + relations
+    L3 = "L3"  # v2.0: concepts + relations + hierarchy (ontology)
+    L4 = "L4"  # v2.0: concepts + relations + hierarchy + evidence
 
 
 @dataclass
@@ -30,18 +39,112 @@ class AnalysisResult:
     error_message: Optional[str] = None
 
 
+@dataclass
+class Decision:
+    """v2.0 decision object produced by the LLM agent from METHODOLOGY.md.
+
+    All fields have defaults so callers can construct a Decision with only
+    the core fields (level, base_dir, doc_name, format, use_case) populated.
+    The optional toggles (chunks / relations / hierarchy / evidence) are
+    used by future extensions; in the v2.0 scaffold stage they are stored
+    but not yet consumed.
+    """
+    level: str = "L1"            # "L1" | "L2" | "L3" | "L4" | "A" | "B" | "C"
+    base_dir: Path = Path()      # pathlib.Path is immutable; safe as direct default
+    doc_name: str = ""
+    format: str = "markdown"     # "markdown" | "wiki" | "json"
+    use_case: str = "transient"  # "obsidian" | "kb" | "transient"
+    chunks: list | None = None
+    relations: bool = False
+    hierarchy: bool = False
+    evidence: bool = False
+
+
 def get_output_files(level: AnalysisLevel) -> list[str]:
-    """Get list of output files for a given analysis level."""
-    base_files = ["summary.md", "key_findings.md"]
+    """Get list of output files for a given analysis level.
+
+    v1.0 (A/B/C) returns legacy files; v2.0 (L1-L4) returns new files.
+    Both paths are supported for backward compatibility.
+    """
     if level == AnalysisLevel.A:
-        return base_files
-    elif level == AnalysisLevel.B:
-        return base_files + ["methodology.md", "figures.md", "related_work.md"]
-    else:  # Level.C
-        return base_files + [
-            "methodology.md", "figures.md", "related_work.md",
-            "limitations.md", "trends.md", "reproducibility.md"
+        return ["summary.md", "key_findings.md"]
+    if level == AnalysisLevel.B:
+        return ["summary.md", "key_findings.md", "methodology.md", "figures.md", "related_work.md"]
+    if level == AnalysisLevel.C:
+        return [
+            "summary.md", "key_findings.md", "methodology.md", "figures.md", "related_work.md",
+            "limitations.md", "trends.md", "reproducibility.md",
         ]
+    if level == AnalysisLevel.L1:
+        return ["concepts.md"]
+    if level == AnalysisLevel.L2:
+        return ["concepts.md", "relations.md"]
+    if level == AnalysisLevel.L3:
+        return ["concepts.md", "relations.md", "hierarchy.md"]
+    if level == AnalysisLevel.L4:
+        return ["concepts.md", "relations.md", "hierarchy.md", "evidence.md"]
+    return []
+
+
+def _files_for_decision_level(level: str) -> list[str]:
+    """Resolve a Decision.level string to the list of files to scaffold.
+
+    Accepts the v2.0 (L1-L4) and v1.0 (A/B/C) level names. A/B/C
+    return an empty list because the v1.0 legacy code path is not
+    exercised by the v2.0 scaffold.
+    """
+    if level in {"A", "B", "C"}:
+        return []
+    try:
+        return get_output_files(AnalysisLevel(level))
+    except ValueError:
+        return []
+
+
+def prepare_decision_framework() -> Path:
+    """Return the absolute Path to METHODOLOGY.md.
+
+    The file contains the v2.0 decision framework (决策四问) which the
+    LLM agent must read before invoking analyze_with_decision().
+    """
+    return Path(__file__).parent / "METHODOLOGY.md"
+
+
+def analyze_with_decision(
+    paper_id: str,
+    mineru_content: str,
+    decision: Decision,
+    output_dir: Path,
+) -> AnalysisResult:
+    """Generate the file scaffold for a paper based on the agent's Decision.
+
+    This is a pure file-scaffold function: it creates the output directory
+    and one empty file per the level's file list. It does NOT call any
+    LLM. LLM-driven content filling is a separate, later stage.
+
+    The ``mineru_content`` parameter is accepted for API compatibility
+    with the agent's call site but is not consumed at the scaffold stage.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    files = _files_for_decision_level(decision.level)
+    written: dict[str, str] = {}
+    for name in files:
+        path = output_dir / name
+        path.write_text("", encoding="utf-8")
+        written[name] = ""
+
+    try:
+        level_enum = AnalysisLevel(decision.level)
+    except ValueError:
+        level_enum = AnalysisLevel.L1
+
+    return AnalysisResult(
+        paper_id=paper_id,
+        level=level_enum,
+        output_dir=output_dir,
+        files=written,
+        success=True,
+    )
 
 
 def get_analysis_prompt(level: AnalysisLevel) -> str:
