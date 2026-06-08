@@ -1,6 +1,381 @@
-# Analyze Sub-Skill
+# Analyze Sub-Skill (v2.0)
 
-Handles paper analysis, summarization, and insight extraction.
+**决策驱动的 paper analysis.** v1.0 (Level A/B/C) 仍可用，向后兼容。
+
+## v2.0 流程入口
+
+Agent 拿到 PDF / MD / 解析后内容后必须按以下顺序执行：
+
+1. **读** [METHODOLOGY.md](./METHODOLOGY.md) — v2.0 决策框架（"宪法"）
+2. **答 4 问** — Q1 文档类型 / Q2 规模结构 / Q3 用户意图 / Q4 存哪里
+3. **跑 4 个 decision prompt** — `decision_prompts/decide-{granularity,chunking,graph,output}.md`
+4. **调 API** — `analyze_with_decision(paper_id, mineru_content, decision, output_dir)`
+
+详细 8 步流程见 [§2](#2-v20-决策驱动流程-new)。
+
+---
+
+## §2. v2.0 决策驱动流程 (NEW)
+
+### 2.1 强制 8 步（来自 METHODOLOGY §七）
+
+```
+[1] 读 METHODOLOGY.md
+    ↓
+[2] 读 granularity/level-X-*.md (X = Q1 决策的档位)
+    ↓
+[3] 读 chunking-guide.md → 决策切分策略
+    ↓
+[4] 调 output-questionnaire.md → 问用户 3 件事 (format/location/level)
+    ↓
+[5] 调 decision_prompts/decide-*.md → 4 个 LLM 决策 prompt
+    ↓
+[6] 构造 Decision 对象
+    ↓
+[7] 调 analyze_with_decision(decision) → 生成文件脚手架
+    ↓
+[8] agent 自己的 LLM 填文件内容
+```
+
+**禁止跳过任何一步**（特别是 [1] 和 [4]）。
+
+### 2.2 `Decision` dataclass signature
+
+`skills/analyze/analyzer.py` 里的 dataclass（9 字段）：
+
+```python
+@dataclass
+class Decision:
+    level: str = "L1"            # "L1" | "L2" | "L3" | "L4" | "A" | "B" | "C"
+    base_dir: Path = Path()      # 输出根目录
+    doc_name: str = ""           # 文档名（用于子目录）
+    format: str = "markdown"     # "markdown" | "wiki" | "json"
+    use_case: str = "transient"  # "obsidian" | "kb" | "transient"
+    chunks: list | None = None   # 切分结果（来自 decide-chunking）
+    relations: bool = False      # 是否抽关系
+    hierarchy: bool = False      # 是否抽层级
+    evidence: bool = False       # 是否抽证据
+```
+
+| 字段 | 决策来源 | 说明 |
+|---|---|---|
+| `level` | `decide-granularity.md` | L1-L4（v2.0）或 A/B/C（v1.0 向后兼容） |
+| `base_dir` | `output-questionnaire.md` Q2 | 用户指定输出位置 |
+| `doc_name` | agent 自取 | 文档名 → 子目录名 |
+| `format` | `output-questionnaire.md` Q1 | `wiki`/`md`/`json` |
+| `use_case` | `output-questionnaire.md` Q1 → 推断 | `obsidian`/`kb`/`transient` |
+| `chunks` | `decide-chunking.md` | 切分后 chunks 列表 |
+| `relations`/`hierarchy`/`evidence` | `decide-graph.md` | 抽哪些东西 |
+| （`relation_types`, `ontology_style` 等） | 暂存于 `chunks` 或外部 YAML | v2.0 扩展点 |
+
+### 2.3 L1-L4 档位速览
+
+| 档 | 目标 | 输出文件 | Token 预算 | 切分要求 | 典型场景 |
+|---|---|---|---|---|---|
+| **L1** | 概念字典 | `concepts.md` | < 1k | 可一次过 | 速查表、API 概览 |
+| **L2** | 概念 + 关系 | `concepts.md` + `relations.md` | ~2-5k | ≤ 200 页可一次过 | 用户指南、教程 |
+| **L3** | 完整 ontology | `concepts.md` + `relations.md` + `hierarchy.md` | ~10-50k | **必须分块** | 教材、大型手册、KB 建设 |
+| **L4** | 全文图谱 | `concepts.md` + `relations.md` + `hierarchy.md` + `evidence.md` | ~50-200k | **必须分块** | 学术论文、深度分析 |
+
+详细定义见 [granularity/level-1-concepts.md](./granularity/level-1-concepts.md) ~ [level-4-full-graph.md](./granularity/level-4-full-graph.md)。
+
+### 2.4 何时用 L1 / L2 / L3 / L4
+
+| 文档类型 | 规模 | 首选档 | 理由 |
+|---|---|---|---|
+| 速查表 / cheat sheet | 1-10 页 | **L1** | 概念字典足够 |
+| 用户指南 (user guide) | 10-200 页 | **L2** | 概念+关系足够 |
+| API 文档 | 50-500 页 | **L2**-L3 | 看深度 |
+| 教材 / 教科书 | 200-1000 页 | **L3** | 需要 hierarchy |
+| 大型手册 (amber 1112 页) | 500+ 页 | **L3** | 同上 |
+| 学术论文 | 10-30 页 | **L4** | 需要 evidence |
+
+**自检**（用户没说清时按此推）：
+
+- 用户没明确说要 KG → 默认 **L2**
+- 明确说"深度"/"详细"/"做 KB" → 升 **L3**
+- 明确说"论文"/"原文"/"逐句" → **L4**
+- 明确说"快"/"概览" → **L1**
+
+详细决策表见 [METHODOLOGY.md §三 Q1](./METHODOLOGY.md#三决策四问agent-必答)。
+
+---
+
+## §3. v2.0 Public API
+
+API 全部在 `skills/analyze/analyzer.py`。三个核心函数 + 1 个 enum + 1 个 dataclass。
+
+### 3.1 `prepare_decision_framework() -> Path`
+
+返回 `METHODOLOGY.md` 的绝对路径。**Agent 必先调用此函数拿到路径并读完整内容**，再做任何决策。
+
+```python
+from skills.analyze.analyzer import prepare_decision_framework
+
+methodology_path = prepare_decision_framework()
+# → /home/user/obsidian/AI/claude code/paper-reader/skills/analyze/METHODOLOGY.md
+
+# agent 然后必须 read_file(methodology_path) 并按 §七 8 步走
+```
+
+### 3.2 `analyze_with_decision(...) -> AnalysisResult`
+
+按 `Decision` 生成文件脚手架（**只建空文件，不调 LLM**）。LLM 填内容是 agent 自己的事。
+
+```python
+from pathlib import Path
+from skills.analyze.analyzer import (
+    analyze_with_decision,
+    Decision,
+    AnalysisLevel,
+)
+
+# 例：amber 用户指南 200 页, L2, 推 amber-agent KB
+decision = Decision(
+    level="L2",
+    base_dir=Path("~/obsidian/AI/amber-agent/knowledge_base/amber24/"),
+    doc_name="amber24",
+    format="markdown",
+    use_case="kb",
+    chunks=[{"start": 0, "end": 50}, {"start": 50, "end": 200}],
+    relations=True,     # L2 必开
+    hierarchy=False,    # L2 不开
+    evidence=False,     # L2 不开
+)
+
+result = analyze_with_decision(
+    paper_id="amber24",
+    mineru_content="<已读到的 markdown 内容>",  # scaffold 阶段不用，但 API 要
+    decision=decision,
+    output_dir=Path("~/obsidian/AI/amber-agent/knowledge_base/amber24/"),
+)
+
+# result.files == {"concepts.md": "", "relations.md": ""}
+# result.success == True
+# agent 下一步：自己调 LLM 填这两个文件
+```
+
+### 3.3 `get_output_files(level) -> list[str]`
+
+返回某个档位的输出文件名列表。支持 **L1-L4（v2.0）** 和 **A/B/C（v1.0 向后兼容）**。
+
+```python
+from skills.analyze.analyzer import get_output_files, AnalysisLevel
+
+# v2.0
+get_output_files(AnalysisLevel.L1)  # ['concepts.md']
+get_output_files(AnalysisLevel.L2)  # ['concepts.md', 'relations.md']
+get_output_files(AnalysisLevel.L3)  # ['concepts.md', 'relations.md', 'hierarchy.md']
+get_output_files(AnalysisLevel.L4)  # ['concepts.md', 'relations.md', 'hierarchy.md', 'evidence.md']
+
+# v1.0 向后兼容
+get_output_files(AnalysisLevel.A)   # ['summary.md', 'key_findings.md']
+get_output_files(AnalysisLevel.B)   # 5 files
+get_output_files(AnalysisLevel.C)   # 8 files
+```
+
+### 3.4 `AnalysisLevel` enum
+
+```python
+class AnalysisLevel(Enum):
+    # v1.0 旧档（method-light summarization）
+    A = "A"  # basic: summary + key findings
+    B = "B"  # + methodology + figures + related work
+    C = "C"  # + limitations + trends + reproducibility
+    # v2.0 新档（method-driven, decision-framework-backed）
+    L1 = "L1"  # concepts only
+    L2 = "L2"  # concepts + relations
+    L3 = "L3"  # concepts + relations + hierarchy (ontology)
+    L4 = "L4"  # concepts + relations + hierarchy + evidence
+```
+
+### 3.5 Decision YAML 输出 schema
+
+4 个 `decision_prompts/decide-*.md` 提示的 YAML 输出 schema：
+
+- **granularity** — [decision_prompts/decide-granularity.md](./decision_prompts/decide-granularity.md)
+  → `level` / `reasoning` / `alternative`
+- **chunking** — [decision_prompts/decide-chunking.md](./decision_prompts/decide-chunking.md)
+  → `strategy` / `chunk_size` / `overlap` / `reasoning`
+- **graph** — [decision_prompts/decide-graph.md](./decision_prompts/decide-graph.md)
+  → `extract_relations` / `extract_hierarchy` / `extract_evidence` / `relation_types` / `ontology_style` / `relation_extraction_granularity` / `reasoning`
+- **output** — [decision_prompts/decide-output.md](./decision_prompts/decide-output.md)
+  → `files` / `base_dir` / `format` / `wikilinks` / `cross_links` / `reasoning`
+
+**完整 Decision 流程示例**（amber 1112 页 PDF → KB，L3）：
+
+```yaml
+# decide-granularity.md 输出
+level: L3
+reasoning: |
+  amber 手册 1112 页, 文档类型"大型手册", 章节清晰
+  (Q1 表第 3 行: 500+ 页手册首选 L3, 需要 hierarchy)
+alternative: |
+  备选 L2: 若用户说"不要 KB"则降 L2 (skip hierarchy.md)
+  升 L4: 若用户后续说"要 evidence 追溯"则升 L4
+
+# decide-chunking.md 输出
+strategy: by_chapter_with_overlap
+chunk_size: null  # by_chapter 不填
+overlap: 2        # 章节间重叠 2 页
+reasoning: |
+  1112 页 + 30 章 + 概念跨章 → 章节切分 + 重叠
+  (Q2 表: 1000+ 页强制按章节切分; amber 概念跨章需 overlap)
+
+# decide-graph.md 输出
+extract_relations: true
+extract_hierarchy: true
+extract_evidence: false  # L3 不抽 evidence
+relation_types: [contains, uses, part_of, is_a]
+ontology_style: taxonomy
+relation_extraction_granularity: concept  # L3 用 concept-level
+reasoning: |
+  L3 KB 场景: relations + hierarchy 必抽
+  (手册默认关系类型: contains, uses, part_of)
+  L3 不抽 evidence, 所以 granularity=concept
+
+# decide-output.md 输出
+files: [concepts.md, relations.md, hierarchy.md]
+base_dir: ~/obsidian/AI/amber-agent/knowledge_base/amber24/
+format: markdown
+wikilinks: false
+cross_links: true
+reasoning: |
+  L3 输出 3 文件 (per §四)
+  amber-agent KB 用 markdown 不用 wiki (KB 通常不用 wikilink)
+  L3 + use_case=kb → cross_links=true (KB 需要跨文档链接)
+```
+
+最终构造的 `Decision` 对象：
+
+```python
+Decision(
+    level="L3",
+    base_dir=Path("~/obsidian/AI/amber-agent/knowledge_base/amber24/"),
+    doc_name="amber24",
+    format="markdown",
+    use_case="kb",
+    chunks=[{"strategy": "by_chapter_with_overlap", "overlap": 2,
+             "chapters": [...30 章...]}],
+    relations=True,
+    hierarchy=True,
+    evidence=False,
+)
+```
+
+---
+
+## §4. amber-agent KB 衔接 (NEW)
+
+**核心原则**: 检测到 amber-agent `mineru_output/<doc>/vlm/` 产物 → **优先复用，不重跑 MinerU**。
+
+### 4.1 为什么需要衔接
+
+amber-agent 已经把 PDF 用 MinerU 解析过，产物在：
+
+```
+mineru_output/<doc>/
+├── vlm/                  ← amber-agent 改名的标准产物
+│   ├── <basename>.md     # MinerU 解析后的 markdown
+│   ├── content_list.json # 区块元数据
+│   ├── images/           # 提取的图片
+│   └── *.pdf, layout*.json, ...
+└── hybrid_auto/          ← MinerU 2.5 原始子目录名 (vllm 0.13.0+)
+    └── (同 vlm/ 结构)
+```
+
+`amber_agent_adapter.py` **两种命名都识别**（`vlm/` 优先 → fallback `hybrid_auto/`）。
+
+### 4.2 Public API
+
+```python
+from skills.analyze.amber_agent_adapter import (
+    detect_amber_agent_vlm_output,
+    read_vlm_output,
+    AmberAgentVLMNotFound,
+)
+
+# 检测
+has_vlm = detect_amber_agent_vlm_output("mineru_output/amber24")
+# → True (找到 vlm/ 或 hybrid_auto/)
+
+# 读取
+if has_vlm:
+    markdown, metadata = read_vlm_output("mineru_output/amber24")
+    # markdown: <basename>.md 的全文
+    # metadata: content_list.json 解析后的 dict ({} 表示缺失)
+```
+
+**异常**:
+
+- `AmberAgentVLMNotFound` — `vlm/` 和 `hybrid_auto/` 都不存在
+- `FileNotFoundError` — 子目录存在但 `<basename>.md` 缺失
+
+### 4.3 完整 e2e 流程示意
+
+amber 1112 页 PDF → amber-agent KB：
+
+```python
+from pathlib import Path
+from skills.analyze.amber_agent_adapter import (
+    detect_amber_agent_vlm_output,
+    read_vlm_output,
+)
+from skills.analyze.analyzer import (
+    prepare_decision_framework,
+    analyze_with_decision,
+    Decision,
+)
+
+# [前置] 假设 amber-agent 已跑完 MinerU, 产物在:
+#   mineru_output/amber24/vlm/amber24.md
+#   mineru_output/amber24/vlm/content_list.json
+
+# STEP 1: 复用 amber-agent 的解析结果
+if detect_amber_agent_vlm_output("mineru_output/amber24"):
+    md, meta = read_vlm_output("mineru_output/amber24")
+    # md 已经是 MinerU 解析好的 markdown
+else:
+    raise RuntimeError("Run MinerU first (or amber-agent didn't produce output)")
+
+# STEP 2: 读 METHODOLOGY + 跑 4 问 + 4 decision prompts
+# (省略 agent 内部决策过程, 见 §2.1 8 步流程)
+methodology_path = prepare_decision_framework()  # agent 读这个文件
+
+# STEP 3: 构造 Decision (L3, KB 场景)
+decision = Decision(
+    level="L3",
+    base_dir=Path("~/obsidian/AI/amber-agent/knowledge_base/amber24/"),
+    doc_name="amber24",
+    format="markdown",
+    use_case="kb",
+    chunks=[...],   # from decide-chunking
+    relations=True,
+    hierarchy=True,
+    evidence=False,
+)
+
+# STEP 4: 建文件脚手架
+result = analyze_with_decision(
+    paper_id="amber24",
+    mineru_content=md,                # amber-agent 已解析的 markdown
+    decision=decision,
+    output_dir=decision.base_dir,
+)
+# → result.files = {"concepts.md": "", "relations.md": "", "hierarchy.md": ""}
+
+# STEP 5: agent 自己的 LLM 分块填 3 个文件 (此步不在本 skill API 范围)
+```
+
+### 4.4 与 §5 v1.0 衔接
+
+v1.0 A/B/C 也支持 amber-agent 复用——把 `read_vlm_output()` 拿到的 markdown 喂给 `analyze_summary()` 即可。详见 [§5 v1.0 章节](#5-v10-向后兼容-仍可用)。
+
+---
+
+## §5. v1.0 (向后兼容, 仍可用)
+
+> **以下 v1.0 内容** 完整保留, **仍可用, 向后兼容**。新代码推荐用 v2.0 L1-L4。
 
 ## Analysis Levels
 
@@ -278,3 +653,54 @@ After paper extraction, user will be prompted to select:
 - `analyze summary <paper>` — Generate summary only
 - `analyze key-findings <paper>` — Extract key findings only
 - `analyze methodology <paper>` — Analyze methodology only
+
+---
+
+## §6. v1.0 vs v2.0 选择指南
+
+| 场景 | 文档特征 | 选 v1.0 | 选 v2.0 |
+|---|---|---|---|
+| 论文 / 快速概览 | 10-30 页论文，要摘要+关键发现 | **A** | — |
+| 文献综述 / 论文深入 | 10-30 页，要全面学术分析 | **B** | — |
+| 科研合作 / 批判评估 | 论文，要 limitations/trends/reproducibility | **C** | — |
+| **速查表 / cheat sheet** | 1-10 页，只看概念 | — | **L1** |
+| **教程 / 用户指南** | 10-200 页，要概念+关系 | — | **L2** |
+| **教材 / 手册 / KB 建设** | 200-1000+ 页，要完整 ontology（amber 手册） | — | **L3** |
+| **学术论文深度分析** | 10-30 页，要 evidence 追溯 | — | **L4** |
+
+**决策口诀**:
+
+- 用户要"摘要"/"总结"/"分析论文" → v1.0 (A/B/C)
+- 用户要"提取概念"/"建 KB"/"做知识图"/"复习" → v2.0 (L1-L4)
+- 用户没说清 → 默认 **v2.0 L2**（更现代，向前兼容）
+
+详细决策树见 [METHODOLOGY.md §三 Q1](./METHODOLOGY.md#三决策四问agent-必答)。
+
+---
+
+## §7. 相关文档
+
+### 方法论 & 决策框架
+
+- [METHODOLOGY.md](./METHODOLOGY.md) — v2.0 决策框架（"宪法"）
+- [output-questionnaire.md](./output-questionnaire.md) — 问用户 3 件事（format/location/level）
+- [chunking-guide.md](./chunking-guide.md) — 4 切分策略 + 滑动窗口 + 章节检测
+
+### 粒度定义（per L1-L4）
+
+- [granularity/level-1-concepts.md](./granularity/level-1-concepts.md) — L1 概念字典
+- [granularity/level-2-concepts-relations.md](./granularity/level-2-concepts-relations.md) — L2 概念+关系
+- [granularity/level-3-ontology.md](./granularity/level-3-ontology.md) — L3 完整 ontology
+- [granularity/level-4-full-graph.md](./granularity/level-4-full-graph.md) — L4 全文图谱
+
+### Decision Prompts (LLM 决策 schema)
+
+- [decision_prompts/decide-granularity.md](./decision_prompts/decide-granularity.md) — 选 L1-L4
+- [decision_prompts/decide-chunking.md](./decision_prompts/decide-chunking.md) — 选切分策略
+- [decision_prompts/decide-graph.md](./decision_prompts/decide-graph.md) — 选图谱深度
+- [decision_prompts/decide-output.md](./decision_prompts/decide-output.md) — 选输出文件+位置
+
+### 代码
+
+- [analyzer.py](./analyzer.py) — `Decision` / `prepare_decision_framework` / `analyze_with_decision` / `get_output_files` / `AnalysisLevel`
+- [amber_agent_adapter.py](./amber_agent_adapter.py) — `detect_amber_agent_vlm_output` / `read_vlm_output` (复用 MinerU 产物)
