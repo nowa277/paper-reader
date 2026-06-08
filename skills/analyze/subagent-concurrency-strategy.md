@@ -235,3 +235,15 @@ How many tasks?
 | Analyze 20 papers (LLM) | Mixed | 5 | Pipeline | 120s |
 | 5 independent docs → L1 | Mixed | 5 | Map-Reduce | 120s |
 | 1112p manual → L3 | Mixed | 11 | Hierarchical | 180s |
+
+---
+
+## §8 Additional Anti-Patterns for Granularity
+
+| Anti-Pattern | What Happens | Correct Approach |
+|---|---|---|
+| Over-parallelization | Too many subagents for small task = slower | Match subagent count to task size |
+| Under-parallelization | Sequential processing of independent tasks | Use parallelism for independent work |
+| Wrong pattern selection | Use Pipeline for independent docs = broken | Apply decision tree correctly |
+| No checkpoint | Long task crashes, restart from zero | Write progress.md after each subagent |
+| Ignore failure handling | One subagent failure stops all | Implement L1/L2/L3 verification |
