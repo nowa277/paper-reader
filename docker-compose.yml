@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  paper-reader:
+    build: .
+    image: paper-reader:latest
+    container_name: paper-reader
+    volumes:
+      - ./papers:/app/papers
+      - ~/.paper-reader:/root/.paper-reader
+    environment:
+      - PYTHONUNBUFFERED=1
+    # For CLI usage:
+    # docker run -it --rm paper-reader python main_skill.py <command>
+
+  # Optional: With MinerU for PDF conversion
+  paper-reader-mineru:
+    build: .
+    image: paper-reader:latest
+    container_name: paper-reader-mineru
+    volumes:
+      - ./papers:/app/papers
+      - ~/.paper-reader:/root/.paper-reader
+      - mineru-data:/root/.mineru
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["python", "-c", "print('Install MinerU separately for PDF conversion')"]
+
+volumes:
+  mineru-data:

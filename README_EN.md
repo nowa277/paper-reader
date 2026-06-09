@@ -110,6 +110,30 @@ pip install -e .
 # pip install paper-reader
 ```
 
+### Docker Installation (Recommended for Server/Cloud)
+
+```bash
+# Clone project
+git clone https://github.com/nowa277/paper-reader.git
+cd paper-reader
+
+# Build image
+docker build -t paper-reader .
+
+# Run
+docker run -it --rm -v ~/papers:/app/papers paper-reader python main_skill.py --help
+
+# Or use docker-compose
+docker-compose up --build
+```
+
+### Docker + MinerU (PDF Conversion)
+
+```bash
+# Use docker-compose to start full environment
+docker-compose up paper-reader-mineru
+```
+
 **Requirements:**
 - Python 3.10+
 - `requests` and `psutil` (installed automatically)

@@ -108,6 +108,30 @@ pip install -e .
 # pip install paper-reader
 ```
 
+### Docker 安装（推荐用于服务器/云端）
+
+```bash
+# 克隆项目
+git clone https://github.com/nowa277/paper-reader.git
+cd paper-reader
+
+# 构建镜像
+docker build -t paper-reader .
+
+# 运行
+docker run -it --rm -v ~/papers:/app/papers paper-reader python main_skill.py --help
+
+# 或使用 docker-compose
+docker-compose up --build
+```
+
+### Docker + MinerU（PDF 转换功能）
+
+```bash
+# 使用 docker-compose 自动启动完整环境
+docker-compose up paper-reader-mineru
+```
+
 **依赖**
 - Python 3.10+
 - `requests` 和 `psutil`（自动安装）
