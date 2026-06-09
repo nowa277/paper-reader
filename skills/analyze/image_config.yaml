@@ -1,0 +1,36 @@
+# Image Embedding Configuration
+# Controls how images are extracted and embedded in Obsidian markdown
+
+# Maximum size (bytes) for inline base64 embedding
+# Images smaller than this will be embedded as data URIs
+max_inline_size_bytes: 51200  # 50KB
+
+# Maximum dimensions for inline embedding
+# Images larger than this in either dimension will use external files
+max_inline_dimensions:
+  - 400  # width
+  - 400  # height
+
+# Supported image formats
+supported_formats:
+  - png
+  - jpg
+  - jpeg
+  - svg
+
+# Output directory for external images (relative to output dir)
+output_dir: images
+
+# Whether to preserve original image files
+preserve_originals: true
+
+# Filename pattern for extracted images
+# Variables: {paper_id}, {page}, {index}
+naming_pattern: "{paper_id}_page{page}_{index}"
+
+# Strategy selection thresholds
+thresholds:
+  # Minimum size difference to prefer external over base64
+  size_margin_bytes: 10240  # 10KB
+  # Prefer obsidian embed for files larger than this
+  obsidian_embed_threshold: 1048576  # 1MB

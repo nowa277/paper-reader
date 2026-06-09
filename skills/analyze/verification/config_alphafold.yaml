@@ -1,0 +1,54 @@
+# Verification Config: AlphaFold user guide (27 pages)
+
+## Document Info
+- **Name:** AlphaFold user guide
+- **Pages:** 27
+- **Estimated tokens:** ~60K
+- **Type:** User Guide
+- **Target level:** L1 / L2
+
+---
+
+## Trigger Configuration
+
+| Field | Value |
+|-------|-------|
+| trigger_mode | SINGLE |
+| token_count | 60_000 |
+| reason | < 50K tokens, single LLM per spec §15.1 |
+
+---
+
+## Verification Levels
+
+| Level | Enabled | Config |
+|-------|---------|--------|
+| L1 | ✓ | All 4 checks |
+| L2 | ✗ | Not needed for small doc |
+| L3 | ✗ | Not needed for L1/L2 |
+
+---
+
+## Expected Artifacts
+
+| File | Granularity |
+|------|-------------|
+| concepts.md | L1+ |
+| relations.md | L2 only |
+
+---
+
+## Specific Checks
+
+### L1 (format)
+- wikilink_format: mandatory
+- frontmatter_exists: mandatory
+- callout_format: optional
+- image_syntax: optional (user guide: 40% keep rate baseline)
+
+---
+
+## Notes
+- Small document: no subagent splitting needed
+- Single LLM pass
+- Progress.md not required (no checkpoints)

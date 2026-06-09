@@ -1,0 +1,207 @@
+# E2E Pipeline Configuration
+#
+# Defines pipeline stages, retry policies, and output format options
+# for the amber-agent end-to-end integration.
+
+## Pipeline Stages
+
+stages:
+  - name: detect
+    enabled: true
+    description: Detect VLM output from amber-agent/MinerU
+    timeout_seconds: 30
+
+  - name: parse
+    enabled: true
+    description: Read VLM markdown content and metadata
+    timeout_seconds: 60
+
+  - name: decide
+    enabled: true
+    description: Validate decision against config
+    timeout_seconds: 30
+
+  - name: analyze
+    enabled: true
+    description: Run subagent analysis (scaffold generation)
+    timeout_seconds: 300
+
+  - name: verify
+    enabled: true
+    description: Run L1/L2/L3 verification checks
+    timeout_seconds: 120
+
+  - name: embed_images
+    enabled: true
+    description: Embed images with strategy selection
+    timeout_seconds: 180
+
+  - name: output
+    enabled: true
+    description: Write final output files
+    timeout_seconds: 60
+
+## Retry Policies
+
+retry:
+  # L1: subagent retries with shuffled prompt (1 time max)
+  l1_max_retries: 1
+  l1_prompt_shuffle: true
+
+  # L2: retry with failure samples (>20% failure rate triggers retry)
+  l2_failure_threshold: 0.20
+  l2_sample_rate: 0.10
+  l2_include_failures: true
+
+  # L3: auto-retry once, then ask user
+  l3_max_retries: 1
+  l3_ask_user_on_exhaustion: true
+
+  # Overall timeout for retry loops
+  max_retry_duration_seconds: 600
+
+## Verification Levels
+
+verification:
+  # Default verification levels to run
+  default_levels:
+    - L1
+    - L2
+    - L3
+
+  # Per-level configuration
+  L1:
+    enabled: true
+    checks:
+      - wikilink_format
+      - frontmatter_exists
+      - callout_format
+      - image_syntax
+    fail_fast: true  # L1 failure triggers immediate retry
+
+  L2:
+    enabled: true
+    checks:
+      - concept_definitions
+      - backlinks_exist
+    sample_rate: 0.10
+    fail_threshold: 0.20  # 20% failure rate
+
+  L3:
+    enabled: false  # Only for large docs
+    checks:
+      - no_orphan_nodes
+      - hierarchy_levels
+      - kg_schema_compliance
+    auto_retry: 1
+
+## Image Embedding Configuration
+
+image_embedding:
+  enabled: true
+
+  # Strategy selection thresholds
+  max_inline_size_bytes: 51200  # 50KB
+  max_inline_dimensions: [400, 400]  # width, height
+
+  # Supported formats
+  supported_formats:
+    - png
+    - jpg
+    - jpeg
+    - svg
+
+  # Output settings
+  output_dir: "images"
+  preserve_originals: true
+  naming_pattern: "{paper_id}_page{page}_{index}"
+
+## Output Format Options
+
+output:
+  # Default format
+  default_format: markdown  # markdown | wiki | json
+
+  # Markdown options
+  markdown:
+    frontmatter: true
+    wikilinks: true
+    callouts: true
+    use_obsidian_syntax: true
+
+  # Wiki options
+  wiki:
+    frontmatter: true
+    internal_links: true
+
+  # JSON options
+  json:
+    pretty_print: true
+    include_metadata: true
+
+## Performance Settings
+
+performance:
+  # Token-aware trigger thresholds
+  token_thresholds:
+    single_mode: 500000      # < 500K tokens: single LLM
+    map_reduce_mode: 1000000  # 500K-1M: Map-Reduce
+    hierarchical_mode: 500000  # > 500K: Hierarchical (forced)
+
+  # Parallelism settings
+  max_concurrent_subagents: 5
+  subagent_timeout_seconds: 300
+
+  # Caching
+  enable_caching: true
+  cache_dir: ".cache/paper-reader"
+  cache_ttl_hours: 24
+
+## Checkpoint & Progress
+
+checkpoint:
+  enabled: true
+  progress_log_path: "progress.md"
+  checkpoint_interval_seconds: 300  # 5 minutes
+
+  # On failure
+  save_failed_artifacts: true
+  delete_failed_on_user_cancel: true
+
+## Supported PDF Configurations
+
+pdf_configs:
+  - name: amber26
+    config_file: verification/config_amber26.yaml
+    pages: 1112
+    tokens: 2500000
+    target_level: L3
+    trigger_mode: HIERARCHICAL
+
+  - name: alphafold
+    config_file: verification/config_alphafold.yaml
+    pages: 27
+    tokens: 60000
+    target_level: L1
+    trigger_mode: SINGLE
+
+  - name: colabfold
+    config_file: verification/config_colabfold.yaml
+    pages: 50
+    tokens: 100000
+    target_level: L2
+    trigger_mode: SINGLE
+
+  - name: amber_tutorials
+    config_file: verification/config_amber_tutorials.yaml
+    pages: 150
+    tokens: 300000
+    target_level: L2
+    trigger_mode: SINGLE
+
+  - name: go_best_practices
+    config_file: verification/config_go_best_practices.yaml
+    pages: 80
+    tokens: 200000
+    target_level: L2
+    trigger_mode: SINGLE

@@ -704,3 +704,38 @@ After paper extraction, user will be prompted to select:
 
 - [analyzer.py](./analyzer.py) — `Decision` / `prepare_decision_framework` / `analyze_with_decision` / `get_output_files` / `AnalysisLevel`
 - [amber_agent_adapter.py](./amber_agent_adapter.py) — `detect_amber_agent_vlm_output` / `read_vlm_output` (复用 MinerU 产物)
+
+### Subagent 并行管理 (v2.0 Module 4)
+
+- [subagent-decision-tree.md](./subagent-decision-tree.md) — 何时拆分子 agent (决策树)
+- [subagent-concurrency-strategy.md](./subagent-concurrency-strategy.md) — IO/Compute/Mixed 并发配置
+- [subagent-result-aggregation.md](./subagent-result-aggregation.md) — 结果合并策略 (Concat/Dedupe/Synthesize)
+- [subagent-failure-handling.md](./subagent-failure-handling.md) — L1/L2/L3 三层验证 + 重试策略
+- [subagent-granularity-patterns.md](./subagent-granularity-patterns.md) — Map-Reduce / Pipeline / ToT / Hierarchical 4 种模式
+- [subagent-case-studies.md](./subagent-case-studies.md) — 5 个真实场景案例
+- [subagent_policy.py](./subagent_policy.py) — SubagentPolicy 代码实现 (~250 行)
+- [test_subagent_policy.py](../tests/skills/analyze/test_subagent_policy.py) — 25 个测试用例
+
+### 质量验证与门控 (v2.0 Plan 3)
+
+- [verification/token_estimator.py](./verification/token_estimator.py) — Token 计数触发并行模式
+- [verification/levels.py](./verification/levels.py) — L1/L2/L3 验证层实现 (~350 行)
+- [verification/runner.py](./verification/runner.py) — 反馈循环 + 重试逻辑 (~200 行)
+- [verification/audit_checklist.md](./verification/audit_checklist.md) — 15 条验收清单
+- [verification/feedback_loop.md](./verification/feedback_loop.md) — 3 层门控流程图 + 反模式
+- [verification/config_*.yaml](./verification/) — 5 个 PDF 验证配置 (amber26/AlphaFold/Go/ColabFold/AMBER_Tutorials)
+- [tests/skills/verification/test_verification.py](../tests/skills/analyze/verification/test_verification.py) — 45 个测试用例
+
+### 图像嵌入 (v2.0 Plan 4)
+
+- [image_embedder.py](./image_embedder.py) — 图像提取、元数据追踪、嵌入策略实现 (~350 行)
+- [image_config.yaml](./image_config.yaml) — 嵌入配置 (大小阈值、格式、输出目录)
+- [image-embedding-guide.md](./image-embedding-guide.md) — 使用指南 + 反模式
+- [tests/skills/analyze/test_image_embedder.py](../tests/skills/analyze/test_image_embedder.py) — 20+ 测试用例
+
+### E2E 集成 (v2.0 Plan 5)
+
+- [e2e_integration.py](./e2e_integration.py) — E2E 管道编排 (PDF → VLM → 分析 → 验证 → 输出, ~450 行)
+- [e2e_config.yaml](./e2e_config.yaml) — 管道配置 (阶段定义、重试策略、输出格式选项)
+- [e2e-integration-guide.md](./e2e-integration-guide.md) — 使用指南 + 故障排除 + 性能考虑
+- [tests/skills/analyze/test_e2e_integration.py](../tests/skills/analyze/test_e2e_integration.py) — 22 个���试用例 (全部通过)

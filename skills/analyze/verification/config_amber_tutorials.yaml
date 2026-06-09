@@ -1,0 +1,67 @@
+# Verification Config: AMBER Tutorials
+
+## Document Info
+- **Name:** AMBER Tutorials
+- **Pages:** ~60
+- **Estimated tokens:** ~120K
+- **Type:** Tutorial
+- **Target level:** L1 / L2
+
+---
+
+## Trigger Configuration
+
+| Field | Value |
+|-------|-------|
+| trigger_mode | MAP_REDUCE |
+| token_count | 120_000 |
+| reason | 50K-200K tokens, Map-Reduce per spec §15.1 |
+
+### Subagent Split
+- 2-3 subagents by tutorial module
+
+---
+
+## Verification Levels
+
+| Level | Enabled | Config |
+|-------|---------|--------|
+| L1 | ✓ | All 4 checks |
+| L2 | ✓ | Sample 10% |
+| L3 | ✓ | Full check after merge |
+
+---
+
+## Expected Artifacts
+
+| File | Granularity |
+|------|-------------|
+| concepts.md | L1+ |
+| relations.md | L2 only |
+
+---
+
+## Specific Checks
+
+### L1 (format)
+- wikilink_format: mandatory
+- frontmatter_exists: mandatory
+- callout_format: recommended (tutorials have tips/warnings)
+- image_syntax: optional
+
+### L2 (content)
+- concept_definitions: 80% pass
+- backlinks_exist: 100%
+
+### L3 (completeness)
+- no_orphan_nodes: 0 orphans
+- hierarchy_levels: no skips
+- kg_schema: L2 compliance
+
+---
+
+## Notes
+- Multiple tutorial modules
+- Each module is relatively independent → Map-Reduce fits well
+- Checkpoint after each module
+- Step-by-step tutorials benefit from callouts

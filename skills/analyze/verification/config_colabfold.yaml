@@ -1,0 +1,61 @@
+# Verification Config: ColabFold
+
+## Document Info
+- **Name:** ColabFold tutorial
+- **Pages:** ~40
+- **Estimated tokens:** ~80K
+- **Type:** Tutorial
+- **Target level:** L1 / L2
+
+---
+
+## Trigger Configuration
+
+| Field | Value |
+|-------|-------|
+| trigger_mode | MAP_REDUCE |
+| token_count | 80_000 |
+| reason | 50K-200K tokens, Map-Reduce per spec §15.1 |
+
+### Subagent Split
+- 2 subagents by section (intro + usage)
+
+---
+
+## Verification Levels
+
+| Level | Enabled | Config |
+|-------|---------|--------|
+| L1 | ✓ | All 4 checks |
+| L2 | ✓ | Sample 10% |
+| L3 | ✗ | Skip for L1/L2 |
+
+---
+
+## Expected Artifacts
+
+| File | Granularity |
+|------|-------------|
+| concepts.md | L1+ |
+| relations.md | L2 only |
+
+---
+
+## Specific Checks
+
+### L1 (format)
+- wikilink_format: mandatory
+- frontmatter_exists: mandatory
+- callout_format: recommended
+- image_syntax: optional
+
+### L2 (content)
+- concept_definitions: 80% pass
+- backlinks_exist: 100%
+
+---
+
+## Notes
+- Tutorial with workflow screenshots
+- Callouts for tips/warnings expected
+- Image keep rate: ~30% (tutorial baseline)

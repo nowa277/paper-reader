@@ -1,0 +1,73 @@
+# Verification Config: amber26 manual (1112 pages)
+
+## Document Info
+- **Name:** amber26 manual
+- **Pages:** 1112
+- **Estimated tokens:** 2-3M
+- **Type:** Manual / User Guide
+- **Target level:** L3 (full ontology), L4 (full graph)
+
+---
+
+## Trigger Configuration
+
+| Field | Value |
+|-------|-------|
+| trigger_mode | HIERARCHICAL |
+| token_count | 2_500_000 |
+| reason | > 500K tokens, MUST Hierarchical per spec §15.1 |
+
+### Subagent Split
+- **11 sub-master** (≈250K tokens each)
+- Each sub-master can further Map-Reduce by chapter
+
+---
+
+## Verification Levels
+
+| Level | Enabled | Config |
+|-------|---------|--------|
+| L1 | ✓ | All 4 checks |
+| L2 | ✓ | Sample 5% (tighter than spec default 10%) |
+| L3 | ✓ | All 3 checks + second pass |
+
+### Thresholds
+- L2 failure threshold: **20%** (spec default)
+- L3 auto-retry: **1x** (spec default)
+
+---
+
+## Expected Artifacts
+
+| File | Granularity |
+|------|-------------|
+| concepts.md | L3/L4 |
+| relations.md | L2+ |
+| hierarchy.md | L3+ |
+| evidence.md | L4 only |
+
+---
+
+## Specific Checks
+
+### L1 (format)
+- wikilink_format: mandatory
+- frontmatter_exists: mandatory
+- callout_format: optional
+- image_syntax: optional (manual has lower keep rate)
+
+### L2 (content)
+- concept_definitions: 80% pass
+- backlinks_exist: 100%
+
+### L3 (completeness)
+- no_orphan_nodes: 0 orphans
+- hierarchy_levels: no skips
+- kg_schema: L3 compliance
+
+---
+
+## Notes
+- Large document: expect 2-3 checkpoint recovery events
+- Progress.md logged at each sub-master completion
+- Failed artifacts: delete immediately (spec rule)
