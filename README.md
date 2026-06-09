@@ -90,14 +90,22 @@ Paper Reader 是一款面向 AI 编程 Agent 的智能学术论文分析工具�
 
 ## 安装
 
-```bash
-# 手动安装
-pip install paper-reader
-pipx install paper-reader
+### 推荐：直接告诉你的 AI Agent
+
 ```
-当然也可以直接告诉你的agent
+请按照这个仓库的说明安装 paper-reader skill：https://github.com/nowa277/paper-reader
+```
+
+### 手动安装
+
 ```bash
-Please follow the instructions in this repository: https://github.com/nowa277/paper-reader to configure and install the skill.
+# 克隆并本地安装
+git clone https://github.com/nowa277/paper-reader.git
+cd paper-reader
+pip install -e .
+
+# PyPI 安装（即将支持）
+# pip install paper-reader
 ```
 
 **依赖**

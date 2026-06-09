@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-reader"
-version = "0.1.0"
+version = "2.0.0"
 description = "Intelligent academic paper analysis tool for AI coding agents"
 readme = "README.md"
 license = {text = "MIT"}

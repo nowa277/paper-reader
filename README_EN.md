@@ -32,7 +32,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge&color=2ea44f)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Version](https://img.shields.io/badge/version-v1.10.1-blue?style=for-the-badge)](https://github.com/nowa277/paper-reader/releases)
+[![Version](https://img.shields.io/badge/version-v2.0-blue?style=for-the-badge)](https://github.com/nowa277/paper-reader/releases)
 
 [![Windows](https://img.shields.io/badge/Windows-Supported-0078D4?style=for-the-badge&logo=windows&logoColor=white)](#supported-platforms)
 [![macOS](https://img.shields.io/badge/macOS-Supported-A2AAAD?style=for-the-badge&logo=apple&logoColor=white)](#supported-platforms)
@@ -79,16 +79,35 @@ Paper Reader is an intelligent academic paper analysis tool designed for AI codi
 | **Multi-Source Search** | Search papers across arXiv, PubMed, Semantic Scholar, and CrossRef simultaneously |
 | **Auto PDF Download** | Automatic PDF retrieval with multi-source fallback |
 | **MinerU Integration** | Convert PDF to Markdown while preserving layout, figures, and tables |
-| **Multi-Level Analysis** | Three analysis tiers: Basic, Academic, and Deep Research |
+| **v2.0 Decision-Driven Analysis** | L1-L4 granular output: concepts/relations/ontology/evidence graphs |
+| **Three-Layer Quality Verification** | L1 format / L2 content / L3 consistency validation |
+| **Image Smart Embedding** | Base64 inline / external file / Obsidian wikilink three strategies |
+| **E2E Pipeline** | PDF → VLM → analyze → verify → embed, one-click automation |
+| **Subagent Parallel Management** | Five patterns: single/Map-Reduce/Pipeline/ToT/Hierarchical |
 | **Cross-Platform** | Works on Windows, macOS, and Linux |
 
 ---
 
 ## Installation
 
+### For AI Agents (Recommended)
+
+Simply tell your AI agent to install the skill:
+
+```
+Please follow the instructions in this repository: https://github.com/nowa277/paper-reader to configure and install the skill.
+```
+
+### Manual Installation
+
 ```bash
-pip install paper-reader
-pipx install paper-reader
+# Clone and install locally
+git clone https://github.com/nowa277/paper-reader.git
+cd paper-reader
+pip install -e .
+
+# Or install from PyPI (coming soon)
+# pip install paper-reader
 ```
 
 **Requirements:**
@@ -109,16 +128,20 @@ pipx install paper-reader
 
 The agent will search multiple academic databases and return a ranked list of relevant papers with metadata (title, authors, year, abstract, source).
 
-### Analyze a Paper
+### Analyze a Paper (v2.0 Decision-Driven)
 
 ```bash
 /paper-reader analyze <paper-id>
 ```
 
-Specify the analysis level when prompted:
-- **Level A** — Basic: Summary + Key Findings
-- **Level B** — Academic: + Methodology + Figures + Related Work
-- **Level C** — Deep: + Limitations + Trends + Reproducibility
+v2.0 workflow:
+1. **Read** METHODOLOGY.md — Decision framework constitution
+2. **Answer 4 Questions** — Document type / Scale & structure / User intent / Output location
+3. **Run Decision Prompt** — LLM auto-selects granularity, chunking, graph, and output strategy
+4. **Call API** — `analyze_with_decision()` generates file scaffold
+5. **LLM Fills Content** — Agent完善分析结果
+
+Select analysis level (L1-L4) when prompted, or use v1.0 compatible A/B/C levels
 
 ### Setup Commands
 
@@ -130,13 +153,16 @@ Specify the analysis level when prompted:
 
 ---
 
-## Analysis Levels
+## Analysis Levels (v2.0)
 
-| Level | Use Case | Output |
-|-------|----------|--------|
-| **A** | Quick screening, overview | Summary, key findings, one-paragraph abstract |
-| **B** | In-depth reading | Full summary, methodology, figures, related work comparison |
-| **C** | Research preparation | Critical analysis, limitations, trends, reproducibility assessment |
+| Level | Use Case | Output | Token Budget |
+|-------|----------|--------|--------------|
+| **L1** | Quick screening, concept lookup | Concept dictionary | < 1k |
+| **L2** | In-depth reading, user guide | Concept + relationship graph | ~2-5k |
+| **L3** | Knowledge base building, textbooks | Complete ontology (concepts+relations+hierarchy) | ~10-50k |
+| **L4** | Research preparation, paper analysis | Complete graph (with evidence citations) | ~50-200k |
+
+> **v1.0 Compatible:** A/B/C levels still work, analyzer auto-backwards compatible
 
 ---
 
@@ -182,7 +208,15 @@ Specify the analysis level when prompted:
 ```
 paper-reader/
 ├── skills/
-│   ├── analyze/           # Paper analysis with multi-level output
+│   ├── analyze/           # Paper analysis (v2.0 decision-driven)
+│   │   ├── analyzer.py           # Core API (Decision, analyze_with_decision)
+│   │   ├── METHODOLOGY.md        # v2.0 decision framework constitution
+│   │   ├── decision_prompts/     # 4 LLM decision prompts
+│   │   ├── granularity/          # L1-L4 level definitions
+│   │   ├── subagent_policy.py    # Subagent parallel strategies
+│   │   ├── verification/         # L1/L2/L3 quality verification
+│   │   ├── image_embedder.py    # Image smart embedding
+│   │   └── e2e_integration.py   # End-to-end pipeline
 │   ├── config/            # Configuration management
 │   ├── fetch/             # Paper retrieval and search
 │   │   └── sources/      # arXiv, PubMed, Semantic Scholar, CrossRef
@@ -199,7 +233,7 @@ Config file: `~/.paper-reader/config.json`
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "mineru": {
     "installed": false,
     "path": null
@@ -208,7 +242,14 @@ Config file: `~/.paper-reader/config.json`
     "default_mode": "jina"
   },
   "analyze": {
-    "default_template": "default"
+    "default_level": "L2",
+    "enable_verification": true,
+    "enable_image_embedding": false
+  },
+  "subagent": {
+    "default_pattern": "SINGLE",
+    "token_threshold_map_reduce": 50000,
+    "token_threshold_hierarchical": 200000
   }
 }
 ```
