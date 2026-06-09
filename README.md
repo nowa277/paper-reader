@@ -32,7 +32,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge&color=2ea44f)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Version](https://img.shields.io/badge/version-v1.10.1-blue?style=for-the-badge)](https://github.com/nowa277/paper-reader/releases)
+[![Version](https://img.shields.io/badge/version-v2.0-blue?style=for-the-badge)](https://github.com/nowa277/paper-reader/releases)
 
 [![Windows](https://img.shields.io/badge/Windows-Supported-0078D4?style=for-the-badge&logo=windows&logoColor=white)](#supported-platforms)
 [![macOS](https://img.shields.io/badge/macOS-Supported-A2AAAD?style=for-the-badge&logo=apple&logoColor=white)](#supported-platforms)
@@ -79,7 +79,11 @@ Paper Reader 是一款面向 AI 编程 Agent 的智能学术论文分析工具�
 | **多源搜索** | 同时在 arXiv、PubMed、Semantic Scholar、CrossRef 搜索论文 |
 | **自动下载** | 多源自动切换下载论文 PDF |
 | **MinerU 集成** | PDF 转 Markdown，保留排版、图表和表格 |
-| **多级分析** | 三种分析级别：基础、学术、深度研究 |
+| **v2.0 决策驱动分析** | L1-L4 四级粒度输出：概念/关系/本体/证据图谱 |
+| **三层质量验证** | L1 格式校验 / L2 内容校验 / L3 一致性校验 |
+| **图像智能嵌入** | Base64 内联 / 外部文件 / Obsidian wikilink 三种策略 |
+| **E2E 管道** | PDF → VLM → 分析 → 验证 → 嵌入，一键自动化 |
+| **Subagent 并行管理** | 单 agent / Map-Reduce / Pipeline / ToT / Hierarchical 五种模式 |
 | **跨平台** | 支持 Windows、macOS、Linux |
 
 ---
@@ -114,16 +118,20 @@ Please follow the instructions in this repository: https://github.com/nowa277/pa
 
 Agent 会在多个学术数据库搜索，返回相关论文列表及元数据（标题、作者、年份、摘要、来源）。
 
-### 分析论文
+### 分析论文 (v2.0 决策驱动)
 
 ```bash
 /paper-reader analyze <paper-id>
 ```
 
-提示时选择分析级别：
-- **A级** — 基础：摘要 + 关键发现
-- **B级** — 学术：+ 方法论 + 图表 + 相关工作
-- **C级** — 深度：+ 局限性 + 趋势 + 复现分析
+v2.0 工作流：
+1. **读** METHODOLOGY.md — 决策框架宪法
+2. **答 4 问** — 文档类型 / 规模结构 / 用户意图 / 输出位置
+3. **跑决策 prompt** — LLM 自动选择粒度、切分、图谱、输出策略
+4. **调 API** — `analyze_with_decision()` 生成文件脚手架
+5. **LLM 填内容** — Agent 完善分析结果
+
+提示时选择分析级别（L1-L4）或使用 v1.0 兼容的 A/B/C 级
 
 ### 配置命令
 
@@ -135,13 +143,16 @@ Agent 会在多个学术数据库搜索，返回相关论文列表及元数据�
 
 ---
 
-## 分析级别
+## 分析级别 (v2.0)
 
-| 级别 | 适用场景 | 输出内容 |
-|------|----------|----------|
-| **A** | 快速浏览、概览 | 摘要、关键发现、一段式总结 |
-| **B** | 深入阅读 | 完整摘要、方法论、图表、相关工作对比 |
-| **C** | 科研准备 | 批判性分析、局限性、趋势、可复现性评估 |
+| 级别 | 适用场景 | 输出内容 | Token 预算 |
+|------|----------|----------|------------|
+| **L1** | 快速浏览、概念速查 | 概念字典 | < 1k |
+| **L2** | 深入阅读、用户指南 | 概念 + 关系图 | ~2-5k |
+| **L3** | 知识库建设、教材 | 完整本体 (概念+关系+层级) | ~10-50k |
+| **L4** | 科研准备、论文分析 | 完整图谱 (含证据引用) | ~50-200k |
+
+> **v1.0 兼容**：A/B/C 级仍可用，分析器会自动向后兼容
 
 ---
 
@@ -187,7 +198,15 @@ Agent 会在多个学术数据库搜索，返回相关论文列表及元数据�
 ```
 paper-reader/
 ├── skills/
-│   ├── analyze/           # 多级论文分析输出
+│   ├── analyze/           # 论文分析 (v2.0 决策驱动)
+│   │   ├── analyzer.py           # 核心 API (Decision, analyze_with_decision)
+│   │   ├── METHODOLOGY.md        # v2.0 决策框架宪法
+│   │   ├── decision_prompts/     # 4 个 LLM 决策 prompt
+│   │   ├── granularity/          # L1-L4 档位定义
+│   │   ├── subagent_policy.py    # Subagent 并行策略
+│   │   ├── verification/         # L1/L2/L3 质量验证
+│   │   ├── image_embedder.py    # 图像智能嵌入
+│   │   └── e2e_integration.py   # 端到端管道
 │   ├── config/            # 配置管理
 │   ├── fetch/             # 论文检索与搜索
 │   │   └── sources/      # arXiv、PubMed、Semantic Scholar、CrossRef
@@ -204,7 +223,7 @@ paper-reader/
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0",
   "mineru": {
     "installed": false,
     "path": null
@@ -213,7 +232,14 @@ paper-reader/
     "default_mode": "jina"
   },
   "analyze": {
-    "default_template": "default"
+    "default_level": "L2",
+    "enable_verification": true,
+    "enable_image_embedding": false
+  },
+  "subagent": {
+    "default_pattern": "SINGLE",
+    "token_threshold_map_reduce": 50000,
+    "token_threshold_hierarchical": 200000
   }
 }
 ```
